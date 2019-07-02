@@ -1,0 +1,7 @@
+# Generated files
+bin/
+pkg/
+
+# IDE files
+.idea/
+.vscode/
