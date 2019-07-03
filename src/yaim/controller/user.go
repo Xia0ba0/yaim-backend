@@ -1,7 +1,8 @@
 package controller
 
-import "github.com/kataras/iris"
-import "fmt"
+import (
+	"github.com/kataras/iris"
+)
 import "yaim/model/jsonmodel"
 
 //PATH /user
@@ -17,21 +18,24 @@ type Usercontroller struct {
 // 函数名 第一个字段为方法名 第二个字段为控制器路径
 // Method POST
 // Path /user/register
-func (c *Usercontroller) PostRegister() string{
+func (c *Usercontroller) PostRegister(){
 	var registerUser jsonmodel.TestForm
 
 	//解析JSON
-	//TODO: 这里不知道为啥老解析错误 晚上再来
+	//curl -X POST --data {\"userid\":\"baoyuli\"} -H "Content-Type:application/json" http://localhost:8090/user/register
 	if err := c.Ctx.ReadJSON(&registerUser); err!=nil{
 		c.Ctx.StatusCode(iris.StatusBadRequest) //400
-		fmt.Println(err)
-		//_, _ = c.Ctx.WriteString(err.Error())
-		return "ok"
-	}else{
-		fmt.Println(registerUser)
-	}
 
-	return "ok"
+		_, _ = c.Ctx.JSON(iris.Map{
+			"message":"failed",
+			"Error":err.Error(),
+		})
+		return
+	}
+	_, _ = c.Ctx.JSON(iris.Map{
+		"message":"success",
+		"data":registerUser.UserID,
+	})
 }
 
 // Method GET

@@ -21,7 +21,7 @@ func main(){
 	_ = app.Run(iris.Addr(":8090"))
 }
 
-//此函数进行 动态依赖注入与 中间件嵌入
+//此函数进行 动态/静态依赖注入与 中间件嵌入
 func userMVC(app *mvc.Application){
 	app.Handle(new(controller.Usercontroller))
 }
