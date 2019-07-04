@@ -4,13 +4,19 @@ import (
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/logger"
 	"github.com/kataras/iris/mvc"
+	"github.com/kataras/iris/sessions"
 	"github.com/kataras/iris/websocket"
 	"net/http"
+	"time"
 	"yaim/controller"
 )
 
+var sessManager = sessions.New(sessions.Config{
+	Cookie:  "YaimSession",
+	Expires: 24 * time.Hour,
+})
 
-//TODO: session管理器 依赖注入与中间件
+
 func main(){
 	app := iris.New()
 	app.Use(logger.New())
@@ -37,5 +43,9 @@ func ConfigurePushMVC(app *mvc.Application){
 	app.Handle(new(controller.PushController))
 }
 func ConfigureUserMVC(app *mvc.Application){
+	// 动态注入session
+	app.Register(sessManager.Start)
+
+
 	app.Handle(new(controller.Usercontroller))
 }
