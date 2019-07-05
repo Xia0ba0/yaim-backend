@@ -8,5 +8,6 @@ type RegisterForm struct {
 }
 
 type TestForm struct{
-	UserID string `json:"userid"`
+	Email string `json:"email"`
+	Password string `json:"password"`
 }

@@ -13,14 +13,11 @@ type PushController struct {
 	Conn websocket.Connection
 }
 
-
 // websocket 连接只接受Get方法
 func (c *PushController) Get(){
-	c.Conn.OnPong(func(){
-		fmt.Println("a client has connected")
-	})
+	fmt.Println(c.Conn.ID(), "has connected")
 	c.Conn.OnLeave(func(romName string){
-		fmt.Println("a client has disconnected")
+		fmt.Println(c.Conn.ID(),"has disconnected")
 	})
 	c.Conn.Wait()
 }
