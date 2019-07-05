@@ -31,14 +31,14 @@ func (c *Usercontroller) PostRegister() {
 		c.Ctx.StatusCode(iris.StatusBadRequest) //400
 
 		_, _ = c.Ctx.JSON(iris.Map{
-			"message": "JSON parse failed",
+			"message": "Error",
 			"Error":   err.Error(),
 		})
 		return
 	}
 	_, _ = c.Ctx.JSON(iris.Map{
-		"message": "success",
-		"data":    registerUser.UserID,
+		"message": "Success",
+		"data":    registerUser.Email,
 	})
 }
 
@@ -46,14 +46,6 @@ func (c *Usercontroller) PostRegister() {
 func (c *Usercontroller) getuserid() string {
 	userID := c.Sess.GetStringDefault(USERIDKEY, "")
 	return userID
-}
-
-func (c *Usercontroller) ifloggedin() bool {
-	if c.getuserid() != "" {
-		return true
-	} else {
-		return false
-	}
 }
 
 //Method POST
@@ -65,50 +57,31 @@ func (c *Usercontroller) PostLogin() {
 		c.Ctx.StatusCode(iris.StatusBadRequest) //400
 
 		_, _ = c.Ctx.JSON(iris.Map{
-			"message": "failed",
-			"Error":   err.Error(),
+			"message": "Error",
+			"data":   err.Error(),
 		})
-	} else if loginUser.UserID != "baoyuli" {
+	} else if loginUser.Email != "123" || loginUser.Password != "123" {
 		_, _ = c.Ctx.JSON(iris.Map{
-			"message": "Wrong Username",
-			"data":    "",
+			"message": "Error",
+			"data":    "Wrong UserName",
 		})
 	} else {
-		c.Sess.Set(USERIDKEY, loginUser.UserID)
-
+		c.Sess.Set(USERIDKEY, loginUser.Email)
 		_, _ = c.Ctx.JSON(iris.Map{
 			"message": "Success",
-			"data":    loginUser.UserID,
+			"data":    iris.Map{
+				"userid":loginUser.Email,
+				"Cookie":"YaimSession="+ c.Sess.ID(),
+			},
 		})
 	}
 }
 
-func (c Usercontroller) GetLogin() {
-	if c.ifloggedin() {
-		_, _ = c.Ctx.JSON(iris.Map{
-			"message": "Already logged in",
-			"data":    c.getuserid(),
-		})
-	} else {
-		_, _ = c.Ctx.JSON(iris.Map{
-			"message": "Haven't logged in",
-			"data":    "",
-		})
-	}
-}
-
-func (c Usercontroller) GetLogout(){
-	if c.ifloggedin(){
-		user := c.getuserid()
-		c.Sess.Destroy()
-		_, _ = c.Ctx.JSON(iris.Map{
-			"message": "Already logged out",
-			"data":    user,
-		})
-	}else{
-		_, _ = c.Ctx.JSON(iris.Map{
-			"message": "Haven't logged in",
-			"data":    "",
-		})
-	}
+func (c Usercontroller) GetLogout() {
+	user := c.getuserid()
+	c.Sess.Destroy()
+	_, _ = c.Ctx.JSON(iris.Map{
+		"message": "Success",
+		"data":    user,
+	})
 }

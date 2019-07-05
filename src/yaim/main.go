@@ -6,9 +6,15 @@ import (
 	"github.com/kataras/iris/mvc"
 	"github.com/kataras/iris/sessions"
 	"github.com/kataras/iris/websocket"
+)
+import (
+	"yaim/controller"
+	"yaim/middleware"
+)
+
+import (
 	"net/http"
 	"time"
-	"yaim/controller"
 )
 
 var sessManager = sessions.New(sessions.Config{
@@ -20,6 +26,8 @@ var sessManager = sessions.New(sessions.Config{
 func main(){
 	app := iris.New()
 	app.Use(logger.New())
+
+	app.Use(middleware.Allowall)
 
 	mvc.Configure(app.Party("/websocket"),ConfigurePushMVC)
 	mvc.Configure(app.Party("/user"),ConfigureUserMVC)
@@ -38,14 +46,27 @@ func ConfigurePushMVC(app *mvc.Application){
 		},
 	})
 
+	noAuthPath := make(map[string]string)
+
+	//DEV
+	noAuthPath["/websocket"] = "GET"
+	app.Router.Use(middleware.NewAuther(sessManager,noAuthPath))
+
 	//动态注入websocket连接 到 controller
-	app.Register(ws.Upgrade)
+	//动态注入 session 到 controller
+	app.Register(
+		ws.Upgrade,
+		sessManager.Start)
+
 	app.Handle(new(controller.PushController))
 }
 func ConfigureUserMVC(app *mvc.Application){
+	noAuthPath := make(map[string]string)
+	noAuthPath["/user/login"] = "POST"
+	noAuthPath["/user/register"] = "POST"
+	app.Router.Use(middleware.NewAuther(sessManager,noAuthPath))
+
 	// 动态注入session
 	app.Register(sessManager.Start)
-
-
 	app.Handle(new(controller.Usercontroller))
 }
