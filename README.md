@@ -7,7 +7,13 @@ export GOPATH=[PATH TO (yaim-backend)]
 source ~/.bashrc
 
 # install dependentcies
+rm -rf ./src/github.com
+rm -rf ./src/xorm.io
+
 go get -u github.com/kataras/iris
+go get github.com/go-xorm/xorm
+go get -u github.com/go-sql-driver/mysql
+
 ```
 ## STUDY
 * [quick start](https://iris-go.com/start/#api-examples)

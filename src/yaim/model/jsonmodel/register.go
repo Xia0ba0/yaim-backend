@@ -2,7 +2,7 @@ package jsonmodel
 
 //TODO: 前后端的数据交换
 type RegisterForm struct {
-	Username string `json:"username"`
+	Name string `json:"name"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
 }

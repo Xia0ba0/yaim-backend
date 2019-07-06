@@ -4,7 +4,9 @@ import (
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/sessions"
 )
+
 import "yaim/model/jsonmodel"
+import "yaim/service/userservice"
 
 const USERIDKEY = "userid"
 
@@ -16,6 +18,8 @@ type Usercontroller struct {
 	Ctx  iris.Context
 	Sess *sessions.Session
 
+	Service *userservice.UserServiceProvider
+
 	//静态绑定方式 所有的控制器共用一个实例
 }
 
@@ -23,10 +27,8 @@ type Usercontroller struct {
 // Method POST
 // Path /user/register
 func (c *Usercontroller) PostRegister() {
-	var registerUser jsonmodel.TestForm
+	var registerUser jsonmodel.RegisterForm
 
-	//解析JSON
-	//curl -X POST --data {\"userid\":\"baoyuli\"} -H "Content-Type:application/json" http://localhost:8090/user/register
 	if err := c.Ctx.ReadJSON(&registerUser); err != nil {
 		c.Ctx.StatusCode(iris.StatusBadRequest) //400
 
@@ -36,6 +38,17 @@ func (c *Usercontroller) PostRegister() {
 		})
 		return
 	}
+
+	if err := c.Service.Adduser(&registerUser); err !=nil{
+
+		_, _ = c.Ctx.JSON(iris.Map{
+			"message":"Error",
+			"Error":err.Error(),
+		})
+
+		return
+	}
+
 	_, _ = c.Ctx.JSON(iris.Map{
 		"message": "Success",
 		"data":    registerUser.Email,
@@ -58,12 +71,12 @@ func (c *Usercontroller) PostLogin() {
 
 		_, _ = c.Ctx.JSON(iris.Map{
 			"message": "Error",
-			"data":   err.Error(),
+			"Error":   err.Error(),
 		})
 	} else if loginUser.Email != "123" || loginUser.Password != "123" {
 		_, _ = c.Ctx.JSON(iris.Map{
 			"message": "Error",
-			"data":    "Wrong UserName",
+			"Error":    "Wrong UserName",
 		})
 	} else {
 		c.Sess.Set(USERIDKEY, loginUser.Email)
