@@ -14,6 +14,13 @@ go get -u github.com/kataras/iris
 go get github.com/go-xorm/xorm
 go get -u github.com/go-sql-driver/mysql
 
+# config database
+db type mysql
+
+db user root
+db password 1005
+
+create database test;
 ```
 ## STUDY
 * [quick start](https://iris-go.com/start/#api-examples)
