@@ -9,8 +9,10 @@ import (
 	"github.com/kataras/iris/mvc"
 	"github.com/kataras/iris/sessions"
 	"github.com/kataras/iris/websocket"
+	"yaim/service/mailservice"
 )
 import (
+	"yaim/config"
 	"yaim/controller"
 	"yaim/middleware"
 	"yaim/model/ormmodel"
@@ -19,14 +21,14 @@ import (
 
 import (
 	"net/http"
-	"time"
 )
 
 var sessManager = sessions.New(sessions.Config{
-	Cookie:  "YaimSession",
-	Expires: 24 * time.Hour,
+	Cookie: config.CookieName,
+	Expires: config.CookieExpires,
 })
-var engine, dberr = xorm.NewEngine("mysql", "root:1005@/test?charset=utf8")
+
+var engine, dberr = xorm.NewEngine(config.DBDriver, config.DBConnection)
 
 func init() {
 	if dberr != nil {
@@ -54,7 +56,7 @@ func main() {
 	mvc.Configure(app.Party("/websocket"), ConfigurePushMVC)
 	mvc.Configure(app.Party("/user"), ConfigureUserMVC)
 
-	_ = app.Run(iris.Addr(":8090"))
+	_ = app.Run(iris.Addr(config.Port))
 }
 
 //此函数进行 动态/静态依赖注入与 中间件嵌入
@@ -85,12 +87,19 @@ func ConfigureUserMVC(app *mvc.Application) {
 	noAuthPath := make(map[string]string)
 	noAuthPath["/user/login"] = "POST"
 	noAuthPath["/user/register"] = "POST"
+	noAuthPath["/user/verification"] = "GET"
 	app.Router.Use(middleware.NewAuther(sessManager, noAuthPath))
 
 	// 动态注入session
 	app.Register(sessManager.Start)
 
 	// 静态注入service
-	service := userservice.NewProvider(engine)
-	app.Handle(&controller.Usercontroller{Service:service})
+	service1 := userservice.NewProvider(engine)
+	service2 := mailservice.NewProvider(
+		config.SMTPServer,
+		config.SMTPAccount,
+		config.SMTPPassword,
+		config.SMTPSubject)
+
+	app.Handle(&controller.Usercontroller{UserService:service1, MailService:service2})
 }

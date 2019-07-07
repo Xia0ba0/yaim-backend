@@ -6,7 +6,9 @@ import (
 	"github.com/kataras/iris/sessions"
 )
 
-const USERIDKEY = "userid"
+import(
+	"yaim/config"
+)
 
 func NewAuther(sessionManager *sessions.Sessions, noAuthPath map[string]string) context.Handler{
 
@@ -15,7 +17,7 @@ func NewAuther(sessionManager *sessions.Sessions, noAuthPath map[string]string) 
 			ctx.Next()
 		}else{
 			sess := sessionManager.Start(ctx)
-			userID := sess.GetStringDefault(USERIDKEY, "")
+			userID := sess.GetStringDefault(config.UserIdKey, "")
 
 			if userID == ""{
 				ctx.StatusCode(iris.StatusForbidden)
@@ -31,9 +33,8 @@ func NewAuther(sessionManager *sessions.Sessions, noAuthPath map[string]string) 
 }
 
 func Allowall(ctx context.Context){
-	ctx.Header("Access-Control-Allow-Origin", "http://localhost:9080")
+	ctx.Header("Access-Control-Allow-Origin", config.HostName)
 	ctx.Header("Access-Control-Allow-Credentials","true")
-	ctx.Header("liliang","hhh")
 
 	ctx.Next()
 }

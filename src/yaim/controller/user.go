@@ -1,14 +1,18 @@
 package controller
 
 import (
+	"crypto/md5"
+	"fmt"
 	"github.com/kataras/iris"
+	"github.com/kataras/iris/mvc"
 	"github.com/kataras/iris/sessions"
+	"net/url"
+	"yaim/config"
+	"yaim/service/mailservice"
 )
 
 import "yaim/model/jsonmodel"
 import "yaim/service/userservice"
-
-const USERIDKEY = "userid"
 
 //PATH /user
 type Usercontroller struct {
@@ -18,9 +22,15 @@ type Usercontroller struct {
 	Ctx  iris.Context
 	Sess *sessions.Session
 
-	Service *userservice.UserServiceProvider
+	UserService *userservice.UserServiceProvider
+	MailService *mailservice.MailServiceProvider
 
 	//静态绑定方式 所有的控制器共用一个实例
+}
+
+//动态路由配置
+func (c *Usercontroller) BeforeActivation(app mvc.BeforeActivation) {
+	app.Handle("GET", "/verification", "Verification")
 }
 
 // 函数名 第一个字段为方法名 第二个字段为控制器路径
@@ -39,25 +49,57 @@ func (c *Usercontroller) PostRegister() {
 		return
 	}
 
-	if err := c.Service.Adduser(&registerUser); err !=nil{
+	if err := c.UserService.Adduser(&registerUser); err != nil {
 
 		_, _ = c.Ctx.JSON(iris.Map{
-			"message":"Error",
-			"Error":err.Error(),
+			"message": "Error",
+			"Error":   err.Error(),
 		})
 
 		return
 	}
 
+	c.MailService.SendToken(registerUser.Email)
+
 	_, _ = c.Ctx.JSON(iris.Map{
 		"message": "Success",
-		"data":    registerUser.Email,
+		"data":    "Please Check your Verification Email",
 	})
 }
 
+func (c *Usercontroller) Verification() string {
+	user := c.Ctx.URLParamDefault("user","no")
+	token := c.Ctx.URLParamDefault("token","no")
+
+	if user=="no" || token=="no"{
+		return "ParamError"
+	}
+
+	user, _ = url.QueryUnescape(user)
+	if !c.UserService.Checkuser(user){
+		return "ParamError"
+	}
+
+	if c.UserService.CheckVerification(user){
+		return "Already Verified"
+	}
+
+	md5Ctx := md5.New()
+	md5Ctx.Write([]byte(user))
+	cipherStr := fmt.Sprintf("%x",md5Ctx.Sum([]byte(config.TokenKey)))
+
+	if token != cipherStr{
+		return "Verify Failed"
+	}
+
+	_ = c.UserService.Verificate(user)
+	return "Success"
+}
+
+
 // 通过Session 获取用户id
 func (c *Usercontroller) getuserid() string {
-	userID := c.Sess.GetStringDefault(USERIDKEY, "")
+	userID := c.Sess.GetStringDefault(config.UserIdKey, "")
 	return userID
 }
 
@@ -73,21 +115,25 @@ func (c *Usercontroller) PostLogin() {
 			"message": "Error",
 			"Error":   err.Error(),
 		})
-	} else if loginUser.Email != "123" || loginUser.Password != "123" {
+		return
+	}
+
+	if err := c.UserService.CheckIdentity(loginUser.Email, loginUser.Password); err != nil {
 		_, _ = c.Ctx.JSON(iris.Map{
 			"message": "Error",
-			"Error":    "Wrong UserName",
+			"Error":   err.Error(),
 		})
-	} else {
-		c.Sess.Set(USERIDKEY, loginUser.Email)
-		_, _ = c.Ctx.JSON(iris.Map{
-			"message": "Success",
-			"data":    iris.Map{
-				"userid":loginUser.Email,
-				"Cookie":"YaimSession="+ c.Sess.ID(),
-			},
-		})
+		return
 	}
+
+	c.Sess.Set(config.UserIdKey, loginUser.Email)
+	_, _ = c.Ctx.JSON(iris.Map{
+		"message": "Success",
+		"data": iris.Map{
+			"userid": loginUser.Email,
+			"Cookie": config.CookieName + "=" + c.Sess.ID(),
+		},
+	})
 }
 
 func (c Usercontroller) GetLogout() {
