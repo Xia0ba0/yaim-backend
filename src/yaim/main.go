@@ -55,6 +55,7 @@ func main() {
 
 	mvc.Configure(app.Party("/websocket"), ConfigurePushMVC)
 	mvc.Configure(app.Party("/user"), ConfigureUserMVC)
+	mvc.Configure(app.Party("/friend"),ConfigureFriendMVC)
 
 	_ = app.Run(iris.Addr(config.Port))
 }
@@ -102,4 +103,13 @@ func ConfigureUserMVC(app *mvc.Application) {
 		config.SMTPSubject)
 
 	app.Handle(&controller.Usercontroller{UserService:service1, MailService:service2})
+}
+
+func ConfigureFriendMVC(app *mvc.Application){
+	noAuthPath := make(map[string]string)
+	app.Router.Use(middleware.NewAuther(sessManager, noAuthPath))
+
+	app.Register(sessManager.Start)
+	service := userservice.NewProvider(engine)
+	app.Handle(&controller.FriendController{UserService:service})
 }

@@ -9,33 +9,36 @@ import (
 )
 
 type MailServiceProvider struct {
-	smtpHost string
-	smtpAcount string
+	smtpHost     string
+	smtpAcount   string
 	smtpPassword string
-	smtpSubject string
+	smtpSubject  string
 }
 
-func NewProvider(smtpHost, smtpAcount, smtpPassword, smtpSubject string) *MailServiceProvider{
+func NewProvider(smtpHost, smtpAcount, smtpPassword, smtpSubject string) *MailServiceProvider {
 	return &MailServiceProvider{
-		smtpHost:smtpHost,
-		smtpAcount:smtpAcount,
-		smtpPassword:smtpPassword,
-		smtpSubject:smtpSubject,
+		smtpHost:     smtpHost,
+		smtpAcount:   smtpAcount,
+		smtpPassword: smtpPassword,
+		smtpSubject:  smtpSubject,
 	}
 }
 
-func (service *MailServiceProvider) SendToken(to string){
-	token:= config.ServerAddr + "/user/verification"
+// 发送验证Token服务
+func (service *MailServiceProvider) SendToken(to string) {
+	token := config.ServerAddr + "/user/verification"
 	token += "?user=" + url.QueryEscape(to)
 
 	md5Ctx := md5.New()
 	md5Ctx.Write([]byte(to))
-	cipherStr := fmt.Sprintf("%x",md5Ctx.Sum([]byte(config.TokenKey)))
+	cipherStr := fmt.Sprintf("%x", md5Ctx.Sum([]byte(config.TokenKey)))
 
 	token += "&token=" + url.QueryEscape(cipherStr)
+	fmt.Println(token)
 	service.Send(to, token)
 }
 
+// 发送邮件服务
 func (service *MailServiceProvider) Send(to, body string) {
 	/*for server to run*/
 	auth := &loginAuth{service.smtpAcount, service.smtpPassword}
@@ -46,15 +49,17 @@ func (service *MailServiceProvider) Send(to, body string) {
 
 	content := "To: " + to + "\r\n"
 	content += "From: " + service.smtpAcount + "\r\n"
-	content += "Subject: "+ service.smtpSubject + "\r\n"
+	content += "Subject: " + service.smtpSubject + "\r\n"
 	content += "Content-Type: text/html; charset=UTF-8"
 	content += "\r\n\r\n"
 	content += html
 
 	msg := []byte(content)
+
+	// 直接新起一个协程 不通信了 不管有没有发送成功。。。。
+	// 反正演示的时候一定可以成功。。。。
 	go smtp.SendMail(service.smtpHost, auth, service.smtpAcount, []string{to}, msg)
 }
-
 
 /*
 	下面的代码没有具体功能

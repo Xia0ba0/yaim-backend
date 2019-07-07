@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/kataras/iris"
-	"github.com/kataras/iris/mvc"
 	"github.com/kataras/iris/sessions"
 	"net/url"
 	"yaim/config"
@@ -22,20 +21,15 @@ type Usercontroller struct {
 	Ctx  iris.Context
 	Sess *sessions.Session
 
+	//静态绑定方式 所有的控制器共用一个实例
 	UserService *userservice.UserServiceProvider
 	MailService *mailservice.MailServiceProvider
-
-	//静态绑定方式 所有的控制器共用一个实例
-}
-
-//动态路由配置
-func (c *Usercontroller) BeforeActivation(app mvc.BeforeActivation) {
-	app.Handle("GET", "/verification", "Verification")
 }
 
 // 函数名 第一个字段为方法名 第二个字段为控制器路径
 // Method POST
 // Path /user/register
+// function: 用户注册 并且发送验证邮件
 func (c *Usercontroller) PostRegister() {
 	var registerUser jsonmodel.RegisterForm
 
@@ -59,7 +53,7 @@ func (c *Usercontroller) PostRegister() {
 		return
 	}
 
-	c.MailService.SendToken(registerUser.Email)
+	//c.MailService.SendToken(registerUser.Email)
 
 	_, _ = c.Ctx.JSON(iris.Map{
 		"message": "Success",
@@ -67,28 +61,32 @@ func (c *Usercontroller) PostRegister() {
 	})
 }
 
-func (c *Usercontroller) Verification() string {
-	user := c.Ctx.URLParamDefault("user","no")
-	token := c.Ctx.URLParamDefault("token","no")
+// 函数名 第一个字段为方法名 第二个字段为控制器路径
+// Method GET
+// Path /user/verification
+// function: 用户邮箱验证
+func (c *Usercontroller) GetVerification() string {
+	user := c.Ctx.URLParamDefault("user", "no")
+	token := c.Ctx.URLParamDefault("token", "no")
 
-	if user=="no" || token=="no"{
+	if user == "no" || token == "no" {
 		return "ParamError"
 	}
 
 	user, _ = url.QueryUnescape(user)
-	if !c.UserService.Checkuser(user){
+	if !c.UserService.Checkuser(user) {
 		return "ParamError"
 	}
 
-	if c.UserService.CheckVerification(user){
+	if c.UserService.CheckVerification(user) {
 		return "Already Verified"
 	}
 
 	md5Ctx := md5.New()
 	md5Ctx.Write([]byte(user))
-	cipherStr := fmt.Sprintf("%x",md5Ctx.Sum([]byte(config.TokenKey)))
+	cipherStr := fmt.Sprintf("%x", md5Ctx.Sum([]byte(config.TokenKey)))
 
-	if token != cipherStr{
+	if token != cipherStr {
 		return "Verify Failed"
 	}
 
@@ -96,17 +94,11 @@ func (c *Usercontroller) Verification() string {
 	return "Success"
 }
 
-
-// 通过Session 获取用户id
-func (c *Usercontroller) getuserid() string {
-	userID := c.Sess.GetStringDefault(config.UserIdKey, "")
-	return userID
-}
-
-//Method POST
+// Method POST
 // Path /user/login
+// function 用户登录
 func (c *Usercontroller) PostLogin() {
-	var loginUser jsonmodel.TestForm
+	var loginUser jsonmodel.LoginForm
 
 	if err := c.Ctx.ReadJSON(&loginUser); err != nil {
 		c.Ctx.StatusCode(iris.StatusBadRequest) //400
@@ -136,11 +128,78 @@ func (c *Usercontroller) PostLogin() {
 	})
 }
 
-func (c Usercontroller) GetLogout() {
+// Method POST
+// Path /user/logout
+// function 用户注销
+func (c *Usercontroller) GetLogout() {
 	user := c.getuserid()
 	c.Sess.Destroy()
 	_, _ = c.Ctx.JSON(iris.Map{
 		"message": "Success",
 		"data":    user,
 	})
+}
+
+// Method POST
+// Path /user/key
+// function 用户上传公钥
+func (c *Usercontroller) PostKey() {
+	var keyForm jsonmodel.UploadKeyForm
+
+	if err := c.Ctx.ReadJSON(&keyForm); err != nil {
+		_, _ = c.Ctx.JSON(iris.Map{
+			"message": "Error",
+			"Error":   err.Error(),
+		})
+		return
+	}
+
+	userid := c.getuserid()
+	if err := c.UserService.Updatepubkey(userid, keyForm.Key); err != nil {
+		_, _ = c.Ctx.JSON(iris.Map{
+			"message": "Error",
+			"Error":   err.Error(),
+		})
+		return
+	}
+
+	_, _ = c.Ctx.JSON(iris.Map{
+		"message": "Success",
+		"data":    "Upload public key success",
+	})
+}
+
+// Method POST
+// Path /user/address
+// function 用户上传地址
+func (c *Usercontroller) PostAddress() {
+	var addrForm jsonmodel.UpdateAddrForm
+
+	if err := c.Ctx.ReadJSON(&addrForm); err != nil {
+		_, _ = c.Ctx.JSON(iris.Map{
+			"message": "Error",
+			"Error":   err.Error(),
+		})
+		return
+	}
+
+	userid := c.getuserid()
+	if err := c.UserService.UpdateNetAddr(userid, addrForm.Ip, addrForm.Port); err != nil {
+		_, _ = c.Ctx.JSON(iris.Map{
+			"message": "Error",
+			"Error":   err.Error(),
+		})
+		return
+	}
+
+	_, _ = c.Ctx.JSON(iris.Map{
+		"message": "Success",
+		"data":    "Update network address success",
+	})
+}
+
+// 通过Session 获取用户id
+func (c *Usercontroller) getuserid() string {
+	userID := c.Sess.GetStringDefault(config.UserIdKey, "")
+	return userID
 }

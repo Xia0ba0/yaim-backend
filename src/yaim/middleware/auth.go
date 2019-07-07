@@ -35,6 +35,5 @@ func NewAuther(sessionManager *sessions.Sessions, noAuthPath map[string]string) 
 func Allowall(ctx context.Context){
 	ctx.Header("Access-Control-Allow-Origin", config.HostName)
 	ctx.Header("Access-Control-Allow-Credentials","true")
-
 	ctx.Next()
 }
