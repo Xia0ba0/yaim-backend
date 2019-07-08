@@ -74,7 +74,7 @@ func ConfigurePushMVC(app *mvc.Application) {
 	noAuthPath := make(map[string]string)
 
 	//DEV
-	noAuthPath["/websocket"] = "GET"
+	//noAuthPath["/websocket"] = "GET"
 	app.Router.Use(middleware.NewAuther(sessManager, noAuthPath))
 
 	//动态注入websocket连接 到 controller
@@ -83,9 +83,10 @@ func ConfigurePushMVC(app *mvc.Application) {
 		ws.Upgrade,
 		sessManager.Start)
 
-	//静态注入PushService
-	service := pushservice.NewProvider(engine)
-	app.Handle(&controller.PushController{PushService:service})
+	//静态注入PushService, UserService
+	service1 := pushservice.NewProvider(engine)
+	service2 := userservice.NewProvider(engine)
+	app.Handle(&controller.PushController{PushService:service1,UserService:service2})
 }
 func ConfigureUserMVC(app *mvc.Application) {
 	noAuthPath := make(map[string]string)

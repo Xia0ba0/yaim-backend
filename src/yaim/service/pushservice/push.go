@@ -1,6 +1,7 @@
 package pushservice
 
 import (
+	"fmt"
 	"github.com/go-xorm/xorm"
 	"github.com/kataras/iris/websocket"
 )
@@ -23,6 +24,7 @@ func (service *Provider) Register(email string, conn *websocket.Connection) {
 	// 向在线好友推送上线消息
 	friends := service.GetFriends(email)
 	for _, friend := range friends{
+		fmt.Println(friend)
 
 		// go语言的坑 多写几步
 		connectionPointer := service.connections[friend]
