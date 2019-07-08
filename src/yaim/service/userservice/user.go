@@ -53,7 +53,7 @@ func (service *UserServiceProvider) Updatepubkey(email, pubkey string) error{
 }
 
 // 更新IP和端口服务
-func (service *UserServiceProvider) UpdateNetAddr(email string, ip string, port int32) error{
+func (service *UserServiceProvider) UpdateNetAddr(email string, ip string, port int) error{
 	user := &ormmodel.User{Ip:ip, Port:port}
 	_, err := service.engine.Id(email).Update(user)
 	return err

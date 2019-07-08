@@ -17,7 +17,7 @@ type UploadKeyForm struct {
 
 type UpdateAddrForm struct {
 	Ip   string `json:"ip"`
-	Port int32  `json:"port"`
+	Port int  `json:"port"`
 }
 
 type AddFriendForm struct {
@@ -31,4 +31,18 @@ type HandleAddFriendForm struct {
 
 type DeleteFriendForm struct{
 	FriendEmail string `json:"friendEmail"`
+}
+
+type OnlineUserForm struct{
+	Email string `json:"email"`
+	Username string `json:"username"`
+	Key string `json:"key"`
+	Ip string `json:"ip"`
+	Port int `json:"port"`
+}
+
+type OfflineUserForm struct{
+	Email string `json:"email"`
+	Username string `json:"username"`
+	Key string `json:"key"`
 }

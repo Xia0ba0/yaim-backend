@@ -7,7 +7,7 @@ type User struct {
 	Key string `xorm:"varchar(4096) 'key'"`
 	State string `xorm:"default 'offline' 'state'"`
 	Ip string `xorm:"'ip'"`
-	Port int32 `xorm:"port"`
+	Port int `xorm:"port"`
 	Validate string `xorm:"default 'no' 'validate'"`
 }
 

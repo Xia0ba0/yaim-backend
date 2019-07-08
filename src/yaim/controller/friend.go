@@ -101,7 +101,20 @@ func (c *FriendController) PostDelete() {
 
 	_, _ = c.Ctx.JSON(iris.Map{
 		"message": "Success",
-		"data":   "delete friend successes",
+		"data":    "delete friend successes",
+	})
+}
+
+func (c *FriendController) GetGet() {
+	userid := c.getuserid()
+	onlineUsers, offlineUsers := c.UserService.GetFriends(userid)
+
+	_, _ = c.Ctx.JSON(iris.Map{
+		"message": "Success",
+		"data": iris.Map{
+			"onlineUsers":  onlineUsers,
+			"offlineUsers": offlineUsers,
+		},
 	})
 }
 
