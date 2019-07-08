@@ -8,7 +8,7 @@ import (
 )
 
 // 发起好友请求服务
-func (service *UserServiceProvider) AddFriendRequest(email, friendEmail string) error {
+func (service *Provider) AddFriendRequest(email, friendEmail string) error {
 	if !service.Checkuser(friendEmail) {
 		return errors.New("no such user")
 	}
@@ -30,7 +30,7 @@ func (service *UserServiceProvider) AddFriendRequest(email, friendEmail string) 
 	return err
 }
 
-func (service *UserServiceProvider) HandleFriendRequest(email, friendEmail, action string) error {
+func (service *Provider) HandleFriendRequest(email, friendEmail, action string) error {
 	record := &ormmodel.Friend{Adder: friendEmail, Receiver: email}
 	has, _ := service.engine.Get(record)
 
@@ -54,7 +54,7 @@ func (service *UserServiceProvider) HandleFriendRequest(email, friendEmail, acti
 	return err
 }
 
-func (service *UserServiceProvider) DeleteFriend(email, friendEmail string) error {
+func (service *Provider) DeleteFriend(email, friendEmail string) error {
 	has, record := service.CheckRequest(email, friendEmail)
 	if !has {
 		return errors.New("no such friend")
@@ -69,7 +69,7 @@ func (service *UserServiceProvider) DeleteFriend(email, friendEmail string) erro
 }
 
 // 查询是否有好友请求记录, 并返回记录
-func (service *UserServiceProvider) CheckRequest(email, friendEmail string) (bool, *ormmodel.Friend) {
+func (service *Provider) CheckRequest(email, friendEmail string) (bool, *ormmodel.Friend) {
 	record1 := &ormmodel.Friend{Adder: email, Receiver: friendEmail}
 	record2 := &ormmodel.Friend{Adder: friendEmail, Receiver: email}
 	has1, _ := service.engine.Get(record1)
@@ -86,11 +86,11 @@ func (service *UserServiceProvider) CheckRequest(email, friendEmail string) (boo
 
 // 获取好友列表
 // email 从session中获取， 不存在注入问题
-func (service *UserServiceProvider) GetFriends(email string) ([]*jsonmodel.OnlineUserForm, []*jsonmodel.OfflineUserForm) {
+func (service *Provider) GetFriends(email string) ([]*jsonmodel.OnlineUserForm, []*jsonmodel.OfflineUserForm) {
 
 	onlineQuery := `SELECT email, username, user.key, ip, port
 					FROM user
-					WHERE (state = "online")
+					WHERE (state = "Online")
 						AND
 							(email in (
 										SELECT receiver 
@@ -107,7 +107,7 @@ func (service *UserServiceProvider) GetFriends(email string) ([]*jsonmodel.Onlin
 
 	offlineQuery := `SELECT email, username, user.key
 					FROM user
-					WHERE (state = "offline" or state = "")
+					WHERE (state = "Offline" or state = "")
 							AND
 							(email in (
 										SELECT receiver 

@@ -9,18 +9,18 @@ import (
 	"yaim/model/ormmodel"
 )
 
-type UserServiceProvider struct {
+type Provider struct {
 	engine *xorm.Engine
 }
 
-func NewProvider(engine *xorm.Engine) *UserServiceProvider {
-	return &UserServiceProvider{
+func NewProvider(engine *xorm.Engine) *Provider {
+	return &Provider{
 		engine: engine,
 	}
 }
 
 // 添加用户服务
-func (service *UserServiceProvider) Adduser(reisteruser *jsonmodel.RegisterForm) error {
+func (service *Provider) Adduser(reisteruser *jsonmodel.RegisterForm) error {
 	if service.Checkuser(reisteruser.Email) {
 		return errors.New("already exists")
 	}
@@ -39,28 +39,35 @@ func (service *UserServiceProvider) Adduser(reisteruser *jsonmodel.RegisterForm)
 }
 
 // 用户认证服务
-func (service *UserServiceProvider) Verificate(email string) error {
+func (service *Provider) Verificate(email string) error {
 	user := &ormmodel.User{Validate: "yes"}
 	_, err := service.engine.Id(email).Update(user)
 	return err
 }
 
 // 更新公钥服务
-func (service *UserServiceProvider) Updatepubkey(email, pubkey string) error{
+func (service *Provider) Updatepubkey(email, pubkey string) error{
 	user := &ormmodel.User{Key:pubkey}
 	_, err := service.engine.Id(email).Update(user)
 	return err
 }
 
 // 更新IP和端口服务
-func (service *UserServiceProvider) UpdateNetAddr(email string, ip string, port int) error{
+func (service *Provider) UpdateNetAddr(email string, ip string, port int) error{
 	user := &ormmodel.User{Ip:ip, Port:port}
 	_, err := service.engine.Id(email).Update(user)
 	return err
 }
 
+// 改变用户在线状态
+func (service *Provider) UpdateState(email string, state string) error{
+	user := &ormmodel.User{State:state}
+	_, err := service.engine.Id(email).Update(user)
+	return err
+}
+
 // 用户认证服务
-func (service *UserServiceProvider) CheckIdentity(email string, password string) error {
+func (service *Provider) CheckIdentity(email string, password string) error {
 	if !service.Checkuser(email) {
 		return errors.New("no such user")
 	}
@@ -84,7 +91,7 @@ func (service *UserServiceProvider) CheckIdentity(email string, password string)
 }
 
 // 用户认证检查服务
-func (service *UserServiceProvider) CheckVerification(email string) bool{
+func (service *Provider) CheckVerification(email string) bool{
 	user := &ormmodel.User{Email: email}
 	_, _ = service.engine.Get(user)
 
@@ -92,7 +99,7 @@ func (service *UserServiceProvider) CheckVerification(email string) bool{
 }
 
 // 用户检索服务
-func (service *UserServiceProvider) Checkuser(email string) bool {
+func (service *Provider) Checkuser(email string) bool {
 	user := &ormmodel.User{Email: email}
 	has, _ := service.engine.Get(user)
 	return has

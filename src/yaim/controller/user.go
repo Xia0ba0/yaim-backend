@@ -22,8 +22,8 @@ type Usercontroller struct {
 	Sess *sessions.Session
 
 	//静态绑定方式 所有的控制器共用一个实例
-	UserService *userservice.UserServiceProvider
-	MailService *mailservice.MailServiceProvider
+	UserService *userservice.Provider
+	MailService *mailservice.Provider
 }
 
 // 函数名 第一个字段为方法名 第二个字段为控制器路径

@@ -8,15 +8,15 @@ import (
 	"yaim/config"
 )
 
-type MailServiceProvider struct {
+type Provider struct {
 	smtpHost     string
 	smtpAcount   string
 	smtpPassword string
 	smtpSubject  string
 }
 
-func NewProvider(smtpHost, smtpAcount, smtpPassword, smtpSubject string) *MailServiceProvider {
-	return &MailServiceProvider{
+func NewProvider(smtpHost, smtpAcount, smtpPassword, smtpSubject string) *Provider {
+	return &Provider{
 		smtpHost:     smtpHost,
 		smtpAcount:   smtpAcount,
 		smtpPassword: smtpPassword,
@@ -25,7 +25,7 @@ func NewProvider(smtpHost, smtpAcount, smtpPassword, smtpSubject string) *MailSe
 }
 
 // 发送验证Token服务
-func (service *MailServiceProvider) SendToken(to string) {
+func (service *Provider) SendToken(to string) {
 	token := config.ServerAddr + "/user/verification"
 	token += "?user=" + url.QueryEscape(to)
 
@@ -39,7 +39,7 @@ func (service *MailServiceProvider) SendToken(to string) {
 }
 
 // 发送邮件服务
-func (service *MailServiceProvider) Send(to, body string) {
+func (service *Provider) Send(to, body string) {
 	/*for server to run*/
 	auth := &loginAuth{service.smtpAcount, service.smtpPassword}
 

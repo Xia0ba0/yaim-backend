@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
 	"github.com/kataras/iris"
@@ -10,6 +9,7 @@ import (
 	"github.com/kataras/iris/sessions"
 	"github.com/kataras/iris/websocket"
 	"yaim/service/mailservice"
+	"yaim/service/pushservice"
 )
 import (
 	"yaim/config"
@@ -20,6 +20,7 @@ import (
 )
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -82,7 +83,9 @@ func ConfigurePushMVC(app *mvc.Application) {
 		ws.Upgrade,
 		sessManager.Start)
 
-	app.Handle(new(controller.PushController))
+	//静态注入PushService
+	service := pushservice.NewProvider(engine)
+	app.Handle(&controller.PushController{PushService:service})
 }
 func ConfigureUserMVC(app *mvc.Application) {
 	noAuthPath := make(map[string]string)

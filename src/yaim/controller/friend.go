@@ -15,7 +15,7 @@ type FriendController struct {
 	Ctx  iris.Context
 	Sess *sessions.Session
 
-	UserService *userservice.UserServiceProvider
+	UserService *userservice.Provider
 }
 
 // Method POST
