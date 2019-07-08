@@ -2,6 +2,7 @@ package userservice
 
 import (
 	"errors"
+	"fmt"
 	"yaim/model/ormmodel"
 )
 
@@ -13,6 +14,10 @@ func (service *UserServiceProvider) AddFriendRequest(email, friendEmail string) 
 
 	if has, _:= service.CheckRequest(email, friendEmail); has {
 		return errors.New("repeat request")
+	}
+
+	if email==friendEmail{
+		return errors.New("?")
 	}
 
 	request := new(ormmodel.Friend)
@@ -75,5 +80,51 @@ func (service *UserServiceProvider) CheckRequest(email, friendEmail string) (boo
 		return has2, record2
 	}else{
 		return false, nil
+	}
+}
+
+
+// 获取好友列表
+// email 从session中获取， 不存在注入问题
+func (service *UserServiceProvider) GetFriends(email string)(){
+	offlineQuery := `SELECT email, username, key
+					FROM user
+					WHERE (state = 'no' or state = '')
+							AND
+							(email in (
+										SELECT receiver 
+										FROM friend
+										WHERE adder = "` + email +`" and validate="yes"
+										)
+								OR
+							email in (
+										SELECT adder
+										FROM friend
+										WHERE receiver = "` + email +`" and validate ="yes"
+									)
+							)`
+
+	onlienQuery := `SELECT email, username, key
+					FROM user
+					WHERE (state = 'yes')
+							AND
+							(email in (
+										SELECT receiver 
+										FROM friend
+										WHERE adder = "` + email +`" and validate="yes"
+										)
+								OR
+							email in (
+										SELECT adder
+										FROM friend
+										WHERE receiver = "` + email +`" and validate ="yes"
+									)
+							)`
+
+	offline, err := service.engine.Query(offlineQuery)
+	online, err := service.engine.Query(onlienQuery)
+
+	if err!= nil{
+		fmt.Println()
 	}
 }
