@@ -1,7 +1,6 @@
 package pushservice
 
 import (
-	"fmt"
 	"github.com/go-xorm/xorm"
 	"github.com/kataras/iris/websocket"
 )
@@ -24,12 +23,11 @@ func (service *Provider) Register(email string, conn *websocket.Connection) {
 	// 向在线好友推送上线消息
 	friends := service.GetFriends(email)
 	for _, friend := range friends{
-		fmt.Println(friend)
 
 		// go语言的坑 多写几步
 		connectionPointer := service.connections[friend]
 		connection := *connectionPointer
-		_ = connection.EmitMessage([]byte(""))
+		_ = connection.EmitMessage([]byte("Refresh"))
 	}
 }
 
@@ -41,7 +39,15 @@ func (service *Provider) UnRegister(email string) {
 		// go语言的坑 多写几步
 		connectionPointer := service.connections[friend]
 		connection := *connectionPointer
-		_ = connection.EmitMessage([]byte(""))
+		_ = connection.EmitMessage([]byte("Refresh"))
+	}
+}
+
+func (service *Provider) PushTo(email string){
+	connectionPointer, ok := service.connections[email]
+	if ok{
+		connection := *connectionPointer
+		_ = connection.EmitMessage([]byte("Refresh"))
 	}
 }
 

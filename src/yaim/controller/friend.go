@@ -5,6 +5,7 @@ import (
 	"github.com/kataras/iris/sessions"
 	"yaim/config"
 	"yaim/model/jsonmodel"
+	"yaim/service/pushservice"
 	"yaim/service/userservice"
 )
 
@@ -16,6 +17,7 @@ type FriendController struct {
 	Sess *sessions.Session
 
 	UserService *userservice.Provider
+	PushService *pushservice.Provider
 }
 
 // Method POST
@@ -43,12 +45,15 @@ func (c *FriendController) PostRequest() {
 		return
 	}
 
+	_ = c.UserService.HandleFriendRequest(requestForm.Receiver, userid, "yes")
 	_, _ = c.Ctx.JSON(iris.Map{
 		"message": "Success",
 		"data":    "wait for agreement",
 	})
+	c.PushService.PushTo(requestForm.Receiver)
 }
 
+// 不用这个接口
 func (c *FriendController) PostHandlerequest() {
 	var handleForm jsonmodel.HandleAddFriendForm
 
@@ -89,7 +94,6 @@ func (c *FriendController) PostDelete() {
 		})
 		return
 	}
-
 	userid := c.getuserid()
 	if err := c.UserService.DeleteFriend(userid, deleteForm.FriendEmail); err != nil {
 		_, _ = c.Ctx.JSON(iris.Map{
@@ -103,6 +107,8 @@ func (c *FriendController) PostDelete() {
 		"message": "Success",
 		"data":    "delete friend successes",
 	})
+
+	c.PushService.PushTo(deleteForm.FriendEmail)
 }
 
 func (c *FriendController) GetGet() {

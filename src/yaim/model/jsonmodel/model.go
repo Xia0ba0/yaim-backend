@@ -15,11 +15,6 @@ type UploadKeyForm struct {
 	Key string `json:"key"`
 }
 
-type UpdateAddrForm struct {
-	Ip   string `json:"ip"`
-	Port int  `json:"port"`
-}
-
 type AddFriendForm struct {
 	Receiver string `json:"receiver"`
 }

@@ -31,6 +31,9 @@ var sessManager = sessions.New(sessions.Config{
 
 var engine, dberr = xorm.NewEngine(config.DBDriver, config.DBConnection)
 
+// 全局声明 用户连接管理器 共用一份数据
+var PushService = pushservice.NewProvider(engine)
+
 func init() {
 	if dberr != nil {
 		fmt.Println(dberr.Error())
@@ -84,9 +87,8 @@ func ConfigurePushMVC(app *mvc.Application) {
 		sessManager.Start)
 
 	//静态注入PushService, UserService
-	service1 := pushservice.NewProvider(engine)
-	service2 := userservice.NewProvider(engine)
-	app.Handle(&controller.PushController{PushService:service1,UserService:service2})
+	service := userservice.NewProvider(engine)
+	app.Handle(&controller.PushController{PushService:PushService,UserService:service})
 }
 func ConfigureUserMVC(app *mvc.Application) {
 	noAuthPath := make(map[string]string)
@@ -115,5 +117,5 @@ func ConfigureFriendMVC(app *mvc.Application){
 
 	app.Register(sessManager.Start)
 	service := userservice.NewProvider(engine)
-	app.Handle(&controller.FriendController{UserService:service})
+	app.Handle(&controller.FriendController{UserService:service,PushService:PushService})
 }

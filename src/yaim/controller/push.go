@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"fmt"
+	"github.com/kataras/iris"
 	"github.com/kataras/iris/sessions"
 	"github.com/kataras/iris/websocket"
 	"yaim/config"
@@ -14,6 +14,7 @@ type PushController struct {
 	//控制器依赖注入
 	//动态绑定方式 每一个请求都有差异
 	//注入的字段名必须大写
+	Ctx iris.Context
 	Conn websocket.Connection
 	Sess *sessions.Session
 
@@ -28,20 +29,20 @@ func (c *PushController) Get(){
 
 	// 用户上线 先改变用户状态
 	// 然后注册连接 向好友推送上线消息
+	_ = c.UserService.UpdateNetAddr(userid,c.Ctx.RemoteAddr(),8899)
 	_ = c.UserService.UpdateState(userid, "Online")
 	c.PushService.Register(userid, &c.Conn)
 
 	// 用户下线， 改变用户状态
 	// 销毁连接 向好友推送下线消息
-	_ = c.UserService.UpdateState(userid,"Offline")
-	c.Conn.OnLeave(func(romName string){
+	c.Conn.OnDisconnect(func(){
+		_ = c.UserService.UpdateState(userid,"Offline")
 		c.PushService.UnRegister(userid)
 	})
 
 	// 用户消息监听
 	c.Conn.OnMessage(func (message []byte){
-		_ = c.Conn.EmitMessage([]byte("hello world!"))
-		fmt.Println(string(message))
+
 	})
 
 

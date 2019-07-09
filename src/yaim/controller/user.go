@@ -169,35 +169,6 @@ func (c *Usercontroller) PostKey() {
 	})
 }
 
-// Method POST
-// Path /user/address
-// function 用户上传地址
-func (c *Usercontroller) PostAddress() {
-	var addrForm jsonmodel.UpdateAddrForm
-
-	if err := c.Ctx.ReadJSON(&addrForm); err != nil {
-		_, _ = c.Ctx.JSON(iris.Map{
-			"message": "Error",
-			"Error":   err.Error(),
-		})
-		return
-	}
-
-	userid := c.getuserid()
-	if err := c.UserService.UpdateNetAddr(userid, addrForm.Ip, addrForm.Port); err != nil {
-		_, _ = c.Ctx.JSON(iris.Map{
-			"message": "Error",
-			"Error":   err.Error(),
-		})
-		return
-	}
-
-	_, _ = c.Ctx.JSON(iris.Map{
-		"message": "Success",
-		"data":    "Update network address success",
-	})
-}
-
 // 通过Session 获取用户id
 func (c *Usercontroller) getuserid() string {
 	userID := c.Sess.GetStringDefault(config.UserIdKey, "")
