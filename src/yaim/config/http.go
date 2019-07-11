@@ -6,6 +6,25 @@ import (
 	"net"
 )
 
+const (
+	HostName = "http://localhost:9080"
+	Port     = ":8090"
+
+	CookieName    = "YaimSession"
+	CookieExpires = 24 * time.Hour
+	UserIdKey     = "userid"
+
+	SMTPServer   = "smtp.163.com:25"
+	SMTPAccount  = "m18569002382@163.com"
+	SMTPPassword = "4702391byl"
+	SMTPSubject = "Yaim Account Verification"
+
+	TokenKey = "Yaim?:@$%"
+)
+
+var localIP, _ = Ips()
+var ServerAddr = "http://" + localIP + Port
+
 func Ips() (string, error) {
 
     ips :=  make(map[string]string)
@@ -30,22 +49,3 @@ func Ips() (string, error) {
     fmt.Println("Yout WLAN IP is: " + ip)
     return ip, nil
 }
-
-var localIP, _ = Ips()
-var ServerAddr = "http://" + localIP + Port
-
-const (
-	HostName = "http://localhost:9080"
-	Port     = ":8090"
-
-	CookieName    = "YaimSession"
-	CookieExpires = 24 * time.Hour
-	UserIdKey     = "userid"
-
-	SMTPServer   = "smtp.163.com:25"
-	SMTPAccount  = "m18569002382@163.com"
-	SMTPPassword = "4702391byl"
-	SMTPSubject = "Yaim Account Verification"
-
-	TokenKey = "Yaim?:@$%"
-)
